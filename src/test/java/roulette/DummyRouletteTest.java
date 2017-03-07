@@ -24,45 +24,47 @@ public class DummyRouletteTest {
 
     @Test
     public void startBalance() throws Exception {
-        assertEquals(START_AMOUNT, roulette.getBalance());
+        assertEquals(START_AMOUNT, roulette.balance());
     }
 
     @Test
     public void bet() throws Exception {
         assertTrue(roulette.makeBet(3));
 
-        assertEquals(START_AMOUNT - 3, roulette.getBalance());
+        assertEquals(START_AMOUNT - 3, roulette.balance());
     }
 
     @Test
     public void betAll() throws Exception {
         assertTrue(roulette.makeBet(START_AMOUNT));
 
-        assertEquals(0, roulette.getBalance());
+        assertEquals(0, roulette.balance());
     }
 
     @Test
     public void betMoreThanBalance() throws Exception {
         assertFalse(roulette.makeBet(START_AMOUNT + 1));
 
-        assertEquals(START_AMOUNT, roulette.getBalance());
+        assertEquals(START_AMOUNT, roulette.balance());
     }
 
     @Test
     public void checkResults() throws Exception {
         boolean winResult = false;
         boolean lossResult = false;
-        for (;(!winResult || !lossResult) && roulette.getBalance() > 0;) {
-            int balance = roulette.getBalance();
+        for (;(!winResult || !lossResult) && roulette.balance() > 0;) {
+            int balance = roulette.balance();
             roulette.makeBet(1);
-            boolean win = roulette.waitForResult();
-            if (win) {
+            Utils.awaitFor(() -> roulette.status() == RouletteStatus.READY_FOR_BETS);
+            int newBalance = roulette.balance();
+
+            if (newBalance > balance) {
                 winResult = true;
-                assertEquals(balance + 1, roulette.getBalance());
+                assertEquals(balance + 1, newBalance);
             }
             else {
                 lossResult = true;
-                assertEquals(balance - 1, roulette.getBalance());
+                assertEquals(balance - 1, newBalance);
             }
         }
     }

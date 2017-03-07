@@ -2,6 +2,8 @@ package roulette;
 
 import java.util.Random;
 
+import static roulette.RouletteStatus.READY_FOR_BETS;
+
 public class DummyRoulette implements Roulette {
     private static final Random R = new Random();
     private int balance;
@@ -21,14 +23,15 @@ public class DummyRoulette implements Roulette {
         return true;
     }
 
-    public int getBalance() {
+    public int balance() {
         return balance;
     }
 
-    public boolean waitForResult() {
+    public RouletteStatus status() {
         boolean win = R.nextBoolean();
         if (win)
             balance+=bet*2;
-        return win;
+
+        return READY_FOR_BETS;
     }
 }
