@@ -40,6 +40,8 @@ public class Robot {
 
         if (!roulette.status().isGameStarted())
             throw new GameNotStartedException();
+        if (isStop())
+            throw new IllegalStateException("Robot has been stopped.");
 
         awaitFor(() -> roulette.status() == RouletteStatus.READY_FOR_BETS);
 
@@ -78,6 +80,15 @@ public class Robot {
 
     public boolean isStop() {
         return stop;
+    }
+
+    /**
+     * Supposed to be used only in TESTS.
+     *
+     * @param stop Stop flag.
+     */
+    void setStop(boolean stop) {
+        this.stop = stop;
     }
 
     public RouletteStatistics statistics() {

@@ -73,6 +73,21 @@ public class RobotTest {
     }
 
     @Test
+    public void testNoMoreBetsAfterStop() throws RobotBetException {
+        robot.setStop(true);
+        try {
+            robot.makeBet();
+            fail();
+        }
+        catch (IllegalStateException e) {
+            verify(roulette, never()).makeBet(any());
+            assertTrue(robot.isStop());
+            verify(rouletteStrategy, never()).nextBet(anyInt(), any());
+            verify(stats, never()).addBet(any(), anyBoolean());
+        }
+    }
+
+    @Test
     public void skipBet() throws Exception {
         when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(Bet.skipBet());
 
