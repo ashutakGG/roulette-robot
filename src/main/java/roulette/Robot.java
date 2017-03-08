@@ -1,11 +1,16 @@
 package roulette;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.Objects;
 import java.util.Optional;
 
 import static roulette.Utils.awaitFor;
 
 public class Robot {
+    private final static Logger log = LogManager.getLogger(Robot.class);
+
     private final Roulette roulette;
     private final RouletteStrategy strategy;
     private final RouletteStatistics stats = new RouletteStatistics();
@@ -32,6 +37,8 @@ public class Robot {
     }
 
     public void makeBet() throws RobotBetException {
+        log.info("Making new bet...");
+
         if (!roulette.status().isGameStarted())
             throw new GameNotStartedException();
 
