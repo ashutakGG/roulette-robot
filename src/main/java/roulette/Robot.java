@@ -13,7 +13,7 @@ public class Robot {
 
     private final Roulette roulette;
     private final RouletteStrategy strategy;
-    private final RouletteStatistics stats = new RouletteStatistics();
+    private RouletteStatistics stats = new RouletteStatistics();
     private volatile boolean stop;
 
     public Robot(Roulette roulette, RouletteStrategy strategy) {
@@ -44,21 +44,29 @@ public class Robot {
 
         awaitFor(() -> roulette.status() == RouletteStatus.READY_FOR_BETS);
 
-        Optional<Integer> betAmount = strategy.nextBet(roulette.balance(), stats);
+        final int balance0 = roulette.balance();
+
+        Optional<Integer> betAmount = strategy.nextBet(balance0, stats);
 
         assert betAmount != null;
 
         if (!betAmount.isPresent()) {
+            log.info("Decided to stop betting.");
+
             stop = true;
             return;
         }
 
-        if (betAmount.get() == 0)
+        if (betAmount.get() == 0) {
+            log.info("Skipping current round of bets.");
             return;
+        }
 
         assert betAmount.get() > 0;
 
-        if (betAmount.get() > roulette.balance()) {
+        if (betAmount.get() > balance0) {
+            log.warn("Suggested bet amount is bigger than balance. Stopping the robot.");
+
             stop = true;
             return;
         }
@@ -67,9 +75,26 @@ public class Robot {
 
         if (!success)
             throw new RobotBetException();
+
+        stats.addBet(betAmount.get(), roulette.balance() > balance0);
     }
 
     public boolean isStop() {
         return stop;
+    }
+
+    public RouletteStatistics statistics() {
+        return stats;
+    }
+
+    /**
+     * Supposed to be used only in TESTS.
+     *
+     * @param stats Statistics.
+     */
+    void setStatistics(RouletteStatistics stats) {
+        Objects.nonNull(stats);
+
+        this.stats = stats;
     }
 }
