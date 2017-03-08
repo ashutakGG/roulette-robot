@@ -3,17 +3,16 @@ package roulette;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Optional;
-
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.*;
+import static roulette.BetKind.RED;
 import static roulette.RouletteStatus.GAME_NOT_STARTED;
 
 public class RobotTest {
     private static final int STARTING_BALANCE = 10_000;
-    private static final int BET = 10;
+    public static final Bet BET = new Bet(10, RED);
 
     private Robot robot;
     private Roulette roulette;
@@ -30,14 +29,14 @@ public class RobotTest {
         robot.setStatistics(stats);
 
         when(roulette.status()).thenReturn(RouletteStatus.READY_FOR_BETS);
-        when(roulette.makeBet(anyInt())).thenReturn(true);
+        when(roulette.makeBet(any())).thenReturn(true);
         when(roulette.balance()).thenReturn(STARTING_BALANCE);
     }
 
     @Test
     public void makeWinBet() throws Exception {
-        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(Optional.of(BET));
-        when(roulette.balance()).thenReturn(STARTING_BALANCE, STARTING_BALANCE + BET);
+        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(BET);
+        when(roulette.balance()).thenReturn(STARTING_BALANCE, STARTING_BALANCE + BET.amount());
 
         robot.makeBet();
 
@@ -49,8 +48,8 @@ public class RobotTest {
 
     @Test
     public void makeFailBet() throws Exception {
-        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(Optional.of(BET));
-        when(roulette.balance()).thenReturn(STARTING_BALANCE, STARTING_BALANCE - BET);
+        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(BET);
+        when(roulette.balance()).thenReturn(STARTING_BALANCE, STARTING_BALANCE - BET.amount());
 
         robot.makeBet();
 
@@ -62,48 +61,45 @@ public class RobotTest {
 
     @Test
     public void tryMakeBetAndStop() throws Exception {
-        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(Optional.of(BET));
+        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(BET);
         when(roulette.balance()).thenReturn(1);
 
         robot.makeBet();
 
-        verify(roulette, never()).makeBet(anyInt());
+        verify(roulette, never()).makeBet(any());
         assertTrue(robot.isStop());
         verify(rouletteStrategy).nextBet(anyInt(), eq(stats));
-        verify(stats, never()).addBet(anyInt(), anyBoolean());
+        verify(stats, never()).addBet(any(), anyBoolean());
     }
 
     @Test
-    public void zeroBetShouldBeSkipped() throws Exception {
-        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(Optional.of(0));
+    public void skipBet() throws Exception {
+        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(Bet.skipBet());
 
         robot.makeBet();
 
-        verify(roulette, never()).makeBet(anyInt());
+        verify(roulette, never()).makeBet(any());
         assertFalse(robot.isStop());
         verify(rouletteStrategy).nextBet(anyInt(), eq(stats));
-        verify(stats, never()).addBet(anyInt(), anyBoolean());
+        verify(stats, never()).addBet(any(), anyBoolean());
     }
 
     @Test
-    public void exceptionForNegativeBet() throws Exception {
-        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(Optional.of(-1));
+    public void testNoMoreBetsAndStop() throws Exception {
+        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(Bet.stopBet());
 
-        try {
-            robot.makeBet();
-            fail("Exception was expected");
-        }
-        catch (AssertionError e) {
-            verify(roulette, never()).makeBet(anyInt());
-            verify(rouletteStrategy).nextBet(anyInt(), eq(stats));
-            verify(stats, never()).addBet(anyInt(), anyBoolean());
-        }
+        robot.makeBet();
+
+        verify(roulette, never()).makeBet(any());
+        assertTrue(robot.isStop());
+        verify(rouletteStrategy).nextBet(anyInt(), eq(stats));
+        verify(stats, never()).addBet(any(), anyBoolean());
     }
 
     @Test
     public void throwExceptionIfBetNotSuccess() throws Exception {
-        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(Optional.of(BET));
-        when(roulette.makeBet(anyInt())).thenReturn(false);
+        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(BET);
+        when(roulette.makeBet(any())).thenReturn(false);
 
         try {
             robot.makeBet();
@@ -112,13 +108,13 @@ public class RobotTest {
         catch (RobotBetException e) {
             verify(roulette).makeBet(BET);
             verify(rouletteStrategy).nextBet(anyInt(), eq(stats));
-            verify(stats, never()).addBet(anyInt(), anyBoolean());
+            verify(stats, never()).addBet(any(), anyBoolean());
         }
     }
 
     @Test
     public void throwExceptionIfGameNotStarted() throws Exception {
-        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(Optional.of(BET));
+        when(rouletteStrategy.nextBet(anyInt(), any())).thenReturn(BET);
         when(roulette.status()).thenReturn(GAME_NOT_STARTED);
 
         try {
@@ -126,9 +122,9 @@ public class RobotTest {
             fail();
         }
         catch (GameNotStartedException e) {
-            verify(roulette, never()).makeBet(anyInt());
+            verify(roulette, never()).makeBet(any());
             verify(roulette, never()).startGame(anyInt());
-            verify(stats, never()).addBet(anyInt(), anyBoolean());
+            verify(stats, never()).addBet(any(), anyBoolean());
         }
     }
 }

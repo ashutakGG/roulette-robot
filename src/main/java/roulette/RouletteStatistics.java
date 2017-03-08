@@ -3,11 +3,11 @@ package roulette;
 // TODO Implement real statistics.
 public class RouletteStatistics {
     private boolean empty = true;
-    private int lastBet;
+    private Bet lastBet;
     private boolean isLastWin;
 
-    public void addBet(int betAmount, boolean win) {
-        lastBet = betAmount;
+    public void addBet(Bet bet, boolean win) {
+        lastBet = bet;
         isLastWin = win;
         empty = false;
     }
@@ -19,7 +19,7 @@ public class RouletteStatistics {
         return isLastWin;
     }
 
-    public int lastBet() {
+    public Bet lastBet() {
         if (empty)
             throw new IllegalStateException();
 
@@ -47,7 +47,7 @@ public class RouletteStatistics {
     @Override
     public int hashCode() {
         int result = (empty ? 1 : 0);
-        result = 31 * result + lastBet;
+        result = 31 * result + lastBet.hashCode();
         result = 31 * result + (isLastWin ? 1 : 0);
         return result;
     }

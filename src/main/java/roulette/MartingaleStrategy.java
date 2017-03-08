@@ -1,6 +1,6 @@
 package roulette;
 
-import java.util.Optional;
+import static roulette.BetKind.RED;
 
 public class MartingaleStrategy implements RouletteStrategy {
     private final int minBet;
@@ -13,10 +13,10 @@ public class MartingaleStrategy implements RouletteStrategy {
     }
 
     @Override
-    public Optional<Integer> nextBet(int balance, RouletteStatistics stats) {
+    public Bet nextBet(int balance, RouletteStatistics stats) {
         if (stats.isEmpty() || stats.isLastWin())
-            return Optional.of(minBet);
+            return new Bet(minBet, RED);
 
-        return Optional.of(stats.lastBet() * 2);
+        return new Bet(stats.lastBet().amount() * 2, RED);
     }
 }

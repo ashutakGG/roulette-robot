@@ -4,23 +4,23 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Optional;
+import static roulette.BetKind.RED;
 
 public class MartingaleStrategyTest {
-    private static final int MIN_BET = 5;
+    private static final Bet MIN_BET = new Bet(5, RED);
     private static final int BALANCE = 100;
     private RouletteStrategy strategy;
 
     @Before
     public void setUp() throws Exception {
-        strategy = new MartingaleStrategy(MIN_BET);
+        strategy = new MartingaleStrategy(MIN_BET.amount());
     }
 
     @Test
     public void betWithEmptyStatisticsEqualsToMinBet() throws Exception {
-        Optional<Integer> betAmount = strategy.nextBet(100, new RouletteStatistics());
+        Bet bet = strategy.nextBet(100, new RouletteStatistics());
 
-        Assert.assertEquals(MIN_BET, (int)betAmount.get());
+        Assert.assertEquals(MIN_BET.amount(), bet.amount());
     }
 
     @Test
@@ -28,30 +28,30 @@ public class MartingaleStrategyTest {
         RouletteStatistics stats = new RouletteStatistics();
         stats.addBet(MIN_BET, false);
 
-        Optional<Integer> betAmount = strategy.nextBet(BALANCE, stats);
+        Bet bet = strategy.nextBet(BALANCE, stats);
 
-        Assert.assertEquals(MIN_BET * 2, (int)betAmount.get());
+        Assert.assertEquals(MIN_BET.amount() * 2, bet.amount());
     }
 
     @Test
     public void betAfter2FailsEqualsToFourMinBets() throws Exception {
         RouletteStatistics stats = new RouletteStatistics();
         stats.addBet(MIN_BET, false);
-        stats.addBet(MIN_BET * 2, false);
+        stats.addBet(new Bet(MIN_BET.amount() * 2, MIN_BET.kind()), false);
 
-        Optional<Integer> betAmount = strategy.nextBet(BALANCE, stats);
+        Bet bet = strategy.nextBet(BALANCE, stats);
 
-        Assert.assertEquals(MIN_BET * 4, (int)betAmount.get());
+        Assert.assertEquals(MIN_BET.amount() * 4, bet.amount());
     }
 
     @Test
     public void firstBetAfterWinEqualsToMinBet() throws Exception {
         RouletteStatistics stats = new RouletteStatistics();
         stats.addBet(MIN_BET, false);
-        stats.addBet(MIN_BET * 2, true);
+        stats.addBet(new Bet(MIN_BET.amount() * 2, MIN_BET.kind()), true);
 
-        Optional<Integer> betAmount = strategy.nextBet(BALANCE, stats);
+        Bet bet = strategy.nextBet(BALANCE, stats);
 
-        Assert.assertEquals(MIN_BET, (int)betAmount.get());
+        Assert.assertEquals(MIN_BET.amount(), bet.amount());
     }
 }

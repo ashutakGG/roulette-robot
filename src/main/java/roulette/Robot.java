@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import static roulette.Utils.awaitFor;
 
@@ -46,37 +45,35 @@ public class Robot {
 
         final int balance0 = roulette.balance();
 
-        Optional<Integer> betAmount = strategy.nextBet(balance0, stats);
+        Bet bet = strategy.nextBet(balance0, stats);
 
-        assert betAmount != null;
+        assert bet != null;
 
-        if (!betAmount.isPresent()) {
+        if (bet.isStopBet()) {
             log.info("Decided to stop betting.");
 
             stop = true;
             return;
         }
 
-        if (betAmount.get() == 0) {
+        if (bet.isSkipBet()) {
             log.info("Skipping current round of bets.");
             return;
         }
 
-        assert betAmount.get() > 0;
-
-        if (betAmount.get() > balance0) {
+        if (bet.amount() > balance0) {
             log.warn("Suggested bet amount is bigger than balance. Stopping the robot.");
 
             stop = true;
             return;
         }
 
-        boolean success = roulette.makeBet(betAmount.get());
+        boolean success = roulette.makeBet(bet);
 
         if (!success)
             throw new RobotBetException();
 
-        stats.addBet(betAmount.get(), roulette.balance() > balance0);
+        stats.addBet(bet, roulette.balance() > balance0);
     }
 
     public boolean isStop() {

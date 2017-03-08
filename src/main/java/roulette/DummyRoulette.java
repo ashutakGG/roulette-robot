@@ -13,12 +13,12 @@ public class DummyRoulette implements Roulette {
         this.balance = amount;
     }
 
-    public boolean makeBet(int bet) {
-        if (bet > balance)
+    public boolean makeBet(Bet bet) {
+        if (bet.amount() > balance)
             return false;
 
-        balance -= bet;
-        this.bet = bet;
+        balance -= bet.amount();
+        this.bet = bet.amount();
 
         return true;
     }
@@ -30,7 +30,7 @@ public class DummyRoulette implements Roulette {
     public RouletteStatus status() {
         boolean win = R.nextBoolean();
         if (win)
-            balance+=bet*2;
+            balance += bet * 2;
 
         return READY_FOR_BETS;
     }
