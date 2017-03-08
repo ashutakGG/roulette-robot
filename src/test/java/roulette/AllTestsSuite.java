@@ -7,6 +7,8 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         DummyRouletteTest.class,
         RobotTest.class,
+        MartingaleStrategyTest.class,
+        RouletteStatisticsTest.class
 })
 
 public class AllTestsSuite {
